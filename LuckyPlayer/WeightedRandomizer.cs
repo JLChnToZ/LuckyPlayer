@@ -3,8 +3,30 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
+    /// <summary>
+    /// Interface for dynamic weight controller.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface IItemWeight<T> {
+        /// <summary>
+        /// Gets the weight current defines
+        /// </summary>
+        /// <param name="item">The item current querying</param>
+        /// <returns>The weight of the item</returns>
         double GetWeight(T item);
+    }
+
+    /// <summary>
+    /// Interface for dynamic weight controller with success callback.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface ISuccessCallback<T>: IItemWeight<T> {
+        /// <summary>
+        /// Callback for success selected the item when gets an item randomly from <see cref="WeightedCollection{T}"/>.
+        /// </summary>
+        /// <param name="item">The item which successfully selected</param>
+        /// <remarks>This will only be called when the selected item is binded with current weight controller</remarks>
+        void OnSuccess(T item);
     }
 
     sealed class FixedItemWeight<T>: IItemWeight<T> {
@@ -19,17 +41,38 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         }
     }
 
+    /// <summary>
+    /// Default implementation of dynamic controller which allows changes weight without touching the <see cref="WeightedCollection{T}"/>.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class ItemWeight<T>: IItemWeight<T> {
         double weight;
+        /// <summary>
+        /// The weight.
+        /// </summary>
         public double Weight {
             get { return weight; }
             set { weight = value; }
         }
 
+        /// <summary>
+        /// Constructor, defaults the weight is <c>1</c>.
+        /// </summary>
         public ItemWeight() { weight = 1; }
+
+        /// <summary>
+        /// Constructor with custom weight defined.
+        /// </summary>
+        /// <param name="weight">The initial weight</param>
         public ItemWeight(double weight) { this.weight = weight; }
 
-        double IItemWeight<T>.GetWeight(T item) {
+        /// <summary>
+        /// Gets the current weight
+        /// </summary>
+        /// <param name="item">The item need to check</param>
+        /// <returns>The weight</returns>
+        /// <remarks>This is the interface method for fetching weight.</remarks>
+        public virtual double GetWeight(T item) {
             return weight;
         }
     }
@@ -82,36 +125,76 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         }
     }
 
+    /// <summary>
+    /// A pool of items with dynamic weights defined. 
+    /// </summary>
+    /// <typeparam name="T">Generic type</typeparam>
+    /// <remarks>This class behave like a set.</remarks>
     public class WeightedCollection<T>: ICollection<T>, IDictionary<T, IItemWeight<T>>, IDictionary<T, double>, ICloneable {
-        static readonly Random defaultRandomizer = new Random();
+        static Random defaultRandomizer;
         internal readonly Dictionary<T, IItemWeight<T>> baseDict;
 
         #region Constructors
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public WeightedCollection() {
             baseDict = new Dictionary<T, IItemWeight<T>>();
         }
 
+        /// <summary>
+        /// Constructor with capacity defined.
+        /// </summary>
+        /// <param name="capacity">Initial capacity of the pool</param>
         public WeightedCollection(int capacity) {
             baseDict = new Dictionary<T, IItemWeight<T>>(capacity);
         }
 
+        /// <summary>
+        /// Constructor with <paramref name="comparer"/> defined.
+        /// </summary>
+        /// <param name="comparer">Custom equality comparer for checking between two <typeparamref name="T"/>s are equal.</param>
         public WeightedCollection(IEqualityComparer<T> comparer) {
             baseDict = new Dictionary<T, IItemWeight<T>>(comparer);
         }
 
+        /// <summary>
+        /// Constructor with <paramref name="capacity"/> and <paramref name="comparer"/> defined.
+        /// </summary>
+        /// <param name="capacity">Initial capacity of the pool</param>
+        /// <param name="comparer">Custom equality comparer for checking between two <typeparamref name="T"/>s are equal.</param>
         public WeightedCollection(int capacity, IEqualityComparer<T> comparer) {
             baseDict = new Dictionary<T, IItemWeight<T>>(capacity, comparer);
         }
 
+        /// <summary>
+        /// Constructor which will initialize the pool with an array of <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="source">Array of objects which will initially put into the pool.</param>
+        public WeightedCollection(IEnumerable<T> source) {
+            AddRange(source);
+        }
+
+        /// <summary>
+        /// Constructor which will initialize the pool with an array of <typeparamref name="T"/> with enough <paramref name="capacity"/>.
+        /// </summary>
+        /// <param name="capacity">Initial capacity of the pool</param>
+        /// <param name="source">Array of objects which will initially put into the pool.</param>
         public WeightedCollection(int capacity, IEnumerable<T> source) : this(capacity) {
             AddRange(source);
         }
 
+        /// <summary>
+        /// Constructor which will initialize the pool with an array of <typeparamref name="T"/> with enough <paramref name="capacity"/> and compare by <paramref name="comparer"/>.
+        /// </summary>
+        /// <param name="capacity">Initial capacity of the pool</param>
+        /// <param name="comparer">Custom equality comparer for checking between two <typeparamref name="T"/>s are equal.</param>
+        /// <param name="source">Array of objects which will initially put into the pool.</param>
         public WeightedCollection(int capacity, IEqualityComparer<T> comparer, IEnumerable<T> source) : this(capacity, comparer) {
             AddRange(source);
         }
-
-        private WeightedCollection(IDictionary<T, IItemWeight<T>> clone) {
+        
+        protected WeightedCollection(IDictionary<T, IItemWeight<T>> clone) {
             baseDict = new Dictionary<T, IItemWeight<T>>(clone);
         }
         #endregion
@@ -159,14 +242,28 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             get { return baseDict.Values; }
         }
 
+        /// <summary>
+        /// Adds an item into the pool with default weight.
+        /// </summary>
+        /// <param name="item">The item will add into the pool</param>
         public void Add(T item) {
             baseDict.Add(item, new FixedItemWeight<T>(1));
         }
 
+        /// <summary>
+        /// Adds an item into the pool with static weight.
+        /// </summary>
+        /// <param name="item">The item will add into the pool</param>
+        /// <param name="weight">Static weight</param>
         public void Add(T item, double weight) {
             baseDict.Add(item, new FixedItemWeight<T>(weight));
         }
 
+        /// <summary>
+        /// Adds an item into the pool with dynamic weight definition.
+        /// </summary>
+        /// <param name="item">The item will add into the pool</param>
+        /// <param name="weight">Weight object which will controls the weight of this item</param>
         public void Add(T item, IItemWeight<T> weight) {
             baseDict.Add(item, weight ?? new FixedItemWeight<T>(0));
         }
@@ -179,6 +276,11 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             baseDict.Add(item.Key, item.Value ?? new FixedItemWeight<T>(0));
         }
 
+        /// <summary>
+        /// Is the pool contains the specified item?
+        /// </summary>
+        /// <param name="item">The item that need to checking existance</param>
+        /// <returns><c>true</c> if found, otherwise <c>false</c>.</returns>
         public bool Contains(T item) {
             return baseDict.ContainsKey(item);
         }
@@ -213,6 +315,11 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             return baseDict.TryGetValue(key, out value) && value != null;
         }
 
+        /// <summary>
+        /// Copy the pool of items into an array starting from <paramref name="arrayIndex"/>.
+        /// </summary>
+        /// <param name="array">The array need to contains the copy of the items.</param>
+        /// <param name="arrayIndex">Starts from where?</param>
         public void CopyTo(T[] array, int arrayIndex) {
             baseDict.Keys.CopyTo(array, arrayIndex);
         }
@@ -225,6 +332,11 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             (baseDict as IDictionary<T, IItemWeight<T>>).CopyTo(array, arrayIndex);
         }
 
+        /// <summary>
+        /// Removes an item from the pool.
+        /// </summary>
+        /// <param name="item">The item have to remove.</param>
+        /// <returns><c>true</c> if successfully remove, otherwise <c>false</c>.</returns>
         public bool Remove(T item) {
             return baseDict.Remove(item);
         }
@@ -237,10 +349,17 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             return baseDict.Remove(item.Key);
         }
 
+        /// <summary>
+        /// Removes everything from the pool.
+        /// </summary>
         public void Clear() {
             baseDict.Clear();
         }
 
+        /// <summary>
+        /// Gets an enumerator object for iterates through every items in the pool, even the weight is zero.
+        /// </summary>
+        /// <returns>Enumerator objects which iterates through every items in the pool</returns>
         public IEnumerator<T> GetEnumerator() {
             return baseDict.Keys.GetEnumerator();
         }
@@ -257,16 +376,30 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             return IterateAsStaticWeight().GetEnumerator();
         }
 
+        /// <summary>
+        /// Creates a copy of current pool.
+        /// </summary>
+        /// <returns>A copy of the pool</returns>
         public object Clone() {
             return new WeightedCollection<T>(baseDict);
         }
         #endregion
 
+        /// <summary>
+        /// Batch add items into the pool
+        /// </summary>
+        /// <param name="items">An enumerable object contains all item wanted to add</param>
         public void AddRange(IEnumerable<T> items) {
+            if(items == null) throw new ArgumentNullException("items");
             foreach(var item in items) baseDict[item] = new FixedItemWeight<T>(1);
         }
 
+        /// <summary>
+        /// Batch remove items from the pool. (if exists)
+        /// </summary>
+        /// <param name="items">An enumerable object contains all item wanted to remove</param>
         public void RemoveRange(IEnumerable<T> items) {
+            if(items == null) throw new ArgumentNullException("items");
             foreach(var item in items) baseDict.Remove(item);
         }
 
@@ -275,22 +408,46 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
                 yield return new KeyValuePair<T, double>(kv.Key, kv.Value.GetWeight(kv.Key));
         }
 
+        /// <summary>
+        /// Gets the weight controller object of an item.
+        /// </summary>
+        /// <param name="item">The item</param>
+        /// <returns>The weight controller object</returns>
         public IItemWeight<T> GetWeight(T item) {
             IItemWeight<T> weight;
             return baseDict.TryGetValue(item, out weight) && weight != null ? weight : new FixedItemWeight<T>(0);
         }
 
+        /// <summary>
+        /// Gets the weight of an item. If dynamic object is defined, the value will be fetched immediately.
+        /// </summary>
+        /// <param name="item">The item</param>
+        /// <returns>The weight value</returns>
         public double GetCurrentWeight(T item) {
             IItemWeight<T> weight;
             return baseDict.TryGetValue(item, out weight) && weight != null ? weight.GetWeight(item) : 0;
         }
 
+        /// <summary>
+        /// Binds the item with a dynamic weight controller
+        /// </summary>
+        /// <param name="item">The item</param>
+        /// <param name="weight">The dynamic weight controller</param>
+        /// <returns><c>true</c> if object found and bind successfully, otherwise <c>false</c>.</returns>
+        /// <remarks>If <c>null</c> is passed in <paramref name="weight"/>, it will treat as immutable zero weight.</remarks>
         public bool SetWeight(T item, IItemWeight<T> weight) {
             if(!baseDict.ContainsKey(item)) return false;
             baseDict[item] = weight ?? new FixedItemWeight<T>(0);
             return true;
         }
 
+        /// <summary>
+        /// Sets a static weight of an item.
+        /// </summary>
+        /// <param name="item">The item</param>
+        /// <param name="weight">The weight</param>
+        /// <returns><c>true</c> if object found and sets successfully, otherwise <c>false</c>.</returns>
+        /// <remarks>If <see cref="ItemWeight{T}"/> is binded, it will change the value of it, otherwise it will bind an immutable static weight controller with the <paramref name="weight"/> defined.</remarks>
         public bool SetWeight(T item, double weight) {
             IItemWeight<T> weightRaw;
             if(!baseDict.TryGetValue(item, out weightRaw)) return false;
@@ -305,23 +462,55 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             return true;
         }
 
+        /// <summary>
+        /// Get a random item from the pool.
+        /// </summary>
+        /// <param name="random">Optional randomizer, it will use the default one if <c>null</c> is passed or ignored.</param>
+        /// <returns>The random item</returns>
         public T GetRandomItem(Random random = null) {
+            if(random == null) {
+                if(defaultRandomizer == null)
+                    defaultRandomizer = new Random();
+                random = defaultRandomizer;
+            }
+            return GetRandomItem(random.NextDouble());
+        }
+
+        /// <summary>
+        /// Get an item from the pool with random value passed.
+        /// </summary>
+        /// <param name="randomValue">The randomized value, should be between <c>0</c> and <c>1</c>.</param>
+        /// <returns>The random item</returns>
+        /// <remarks>This overloaded method is for more advanced uses, which require callers to generate the random number by themself then passing it in.</remarks>
+        public virtual T GetRandomItem(double randomValue) {
             int i = 0, count = baseDict.Count;
             if(count < 1) return default(T);
-            double totalWeight = 0, countedWeight = 0, randomValue;
+            double totalWeight = 0, countedWeight = 0;
             var tempList = new KeyValuePair<T, double>[count];
             foreach(var kv in IterateAsStaticWeight()) {
                 tempList[i++] = kv;
                 totalWeight += kv.Value;
             }
-            if(count == 1) return tempList[0].Key;
-            randomValue = (random ?? defaultRandomizer).NextDouble() * totalWeight;
-            for(i = 0; i < count; i++) {
-                countedWeight += tempList[i].Value;
-                if(countedWeight > randomValue)
-                    return tempList[i].Key;
+            T result;
+            IItemWeight<T> weight;
+            if(count == 1) {
+                result = tempList[0].Key;
+            } else {
+                randomValue = ((randomValue % 1 + 1) % 1) * totalWeight;
+                result = tempList[count - 1].Key;
+                for(i = 0; i < count; i++) {
+                    countedWeight += tempList[i].Value;
+                    if(countedWeight > randomValue) {
+                        result = tempList[i].Key;
+                        break;
+                    }
+                }
             }
-            return tempList[count - 1].Key;
+            if(baseDict.TryGetValue(result, out weight)) {
+                var callback = weight as ISuccessCallback<T>;
+                if(callback != null) callback.OnSuccess(result);
+            }
+            return result;
         }
     }
 }
