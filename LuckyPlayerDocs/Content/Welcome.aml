@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<topic id="46eff59d-dd1d-4724-a7d1-833ea5a91017" revisionNumber="1">
+	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+		<introduction>
+			<para>Welcome to documentation of Lucky Player (Ren Pin III Generation)</para>
+		</introduction>
+
+		<section>
+			<title>Introduction</title>
+      <content>
+        <para>This is an experimental library for controlling, handling and balancing the probabilites, mostly and likely to be used in electronic games. It consists a pool class, a player object contains "luckyness" value, and small controllers that will alter the probability by its base value and the player object.</para>
+
+        <para>這是一個實驗性的程式庫，設計成用來控制、處理和平衡機會率，預期是主要用在遊戲的。裡面有一個機率池、掌控「幸運值」（或者所謂的「人品」）的玩家物件、還有數個根據玩家幸運值和其基數而自動調整的機率控制器。</para>
+
+        <para>說到起源，事實上這程式庫已經是第三代版本，而製作動機是因為看到現時的遊戲大多數都以不太公平的機率抽卡(或者蛋)系統，就想製作一個比較公平和容易控制的程式庫，不單只用來實現公平還有平衡的抽獎系統，還能夠簡易的控制遊戲中的機率事物的發生。</para>
+      </content>
+		</section>
+
+		<relatedTopics>
+			<link xlink:href="ec84c069-35f3-4e39-8dfd-9a5ac8f14ac6" />
+		</relatedTopics>
+	</developerConceptualDocument>
+</topic>
