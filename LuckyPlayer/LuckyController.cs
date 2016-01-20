@@ -43,6 +43,10 @@ namespace JLChnToZ.LuckyPlayer {
         public virtual void OnSuccess(T item) {
             fineTune *= 1 + fineTuneOnSuccess;
         }
+
+        internal protected void ResetFineTuneWeight() {
+            fineTune = 1;
+        }
     }
 
     /// <summary>

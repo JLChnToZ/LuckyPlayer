@@ -419,6 +419,17 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         }
 
         /// <summary>
+        /// Gets the weight controller object of an item with specific controller type requested.
+        /// </summary>
+        /// <typeparam name="TItemWeight">A type that implements weight controller interface.</typeparam>
+        /// <param name="item">The item</param>
+        /// <returns>The weight controller object, <c>null</c> (or default value if type is valuetype such as structure) if item not found or type of weight controller does not match.</returns>
+        public TItemWeight GetWeight<TItemWeight>(T item) where TItemWeight : IItemWeight<T> {
+            IItemWeight<T> weight;
+            return baseDict.TryGetValue(item, out weight) && weight is TItemWeight ? (TItemWeight)weight : default(TItemWeight);
+        }
+
+        /// <summary>
         /// Gets the weight of an item. If dynamic object is defined, the value will be fetched immediately.
         /// </summary>
         /// <param name="item">The item</param>
