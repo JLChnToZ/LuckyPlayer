@@ -1,4 +1,4 @@
-Lucky Player
+Lucky Player [![Build status](https://ci.appveyor.com/api/projects/status/p7ty3tg3bvw9unpp?svg=true)](https://ci.appveyor.com/project/JLChnToZ/luckyplayer)
 ============
 
 This is an experimental library for controlling, handling and balancing the probabilites, mostly and likely to be used in electronic games. It consists a pool class, a player object contains "luckyness" value, and small controllers that will alter the probability by its base value and the player object.
