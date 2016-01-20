@@ -9,9 +9,14 @@ namespace JLChnToZ.LuckyPlayer {
     /// <typeparam name="T"></typeparam>
     /// <remarks>You can inherit this class to add customizaton</remarks>
     public class LuckyController<T>: IItemWeight<T>, ISuccessCallback<T> {
+        /// <summary>
+        /// Take a couple percentage of probs when success.
+        /// </summary>
+        public static double fineTuneOnSuccess = -0.0001;
         internal protected readonly double rare;
         internal protected double baseRarity;
         internal protected PlayerLuck luckInstance;
+        internal protected double fineTune;
 
         /// <summary>
         /// Constructor.
@@ -28,14 +33,16 @@ namespace JLChnToZ.LuckyPlayer {
         /// </summary>
         public virtual double GetWeight(T item) {
             if(luckInstance == null) return baseRarity / Math.Pow(2, rare);
-            return baseRarity * Math.Pow(2, luckInstance.Luckyness - rare);
+            return baseRarity * Math.Pow(2, luckInstance.Luckyness - rare) * fineTune;
         }
 
         /// <summary>
-        /// Calls when on item successfully selected, it is an empty method in <see cref="LuckyController{T}"/>
+        /// Calls when on item successfully selected, it will take away a bit probs by percentage of <see cref="fineTuneOnSuccess"/>.
         /// </summary>
         /// <param name="item">The selected item</param>
-        public virtual void OnSuccess(T item) { }
+        public virtual void OnSuccess(T item) {
+            fineTune *= 1 + fineTuneOnSuccess;
+        }
     }
 
     /// <summary>
@@ -70,6 +77,7 @@ namespace JLChnToZ.LuckyPlayer {
         /// <param name="item">The selected item</param>
         public override void OnSuccess(T item) {
             if(amount > 0) amount--;
+            base.OnSuccess(item);
         }
     }
 

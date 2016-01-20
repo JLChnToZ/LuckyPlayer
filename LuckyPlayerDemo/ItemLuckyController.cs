@@ -13,6 +13,7 @@ namespace LuckyPlayerDemo {
 
         public override void OnSuccess(Item item) {
             item.rarity = rare;
+            base.OnSuccess(item);
         }
     }
 }
