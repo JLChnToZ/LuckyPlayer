@@ -44,7 +44,7 @@ namespace JLChnToZ.LuckyPlayer {
             fineTune *= 1 + fineTuneOnSuccess;
         }
 
-        internal protected void ResetFineTuneWeight() {
+        internal protected virtual void ResetFineTuneWeight() {
             fineTune = 1;
         }
     }
