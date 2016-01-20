@@ -26,6 +26,7 @@ namespace JLChnToZ.LuckyPlayer {
         public LuckyController(double rare, double baseRarity = 1) {
             this.rare = rare;
             this.baseRarity = baseRarity;
+            ResetFineTuneWeight();
         }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace JLChnToZ.LuckyPlayer {
                     randomizer = new Random();
                 random = randomizer;
             }
-            return HandleWithLuck(collection, random);
+            return HandleWithLuck(collection, random.NextDouble());
         }
 
         /// <summary>
