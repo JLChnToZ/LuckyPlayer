@@ -10,6 +10,7 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
     /// <remarks>This class behave like a set.</remarks>
     public class WeightedCollection<T>: ICollection<T>, IDictionary<T, IItemWeight<T>>, IDictionary<T, double>, ICloneable {
         static Random defaultRandomizer;
+        object locker = new object();
         internal readonly Dictionary<T, IItemWeight<T>> baseDict;
 
         #region Constructors
@@ -71,7 +72,7 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         public WeightedCollection(int capacity, IEqualityComparer<T> comparer, IEnumerable<T> source) : this(capacity, comparer) {
             AddRange(source);
         }
-        
+
         protected WeightedCollection(IDictionary<T, IItemWeight<T>> clone) {
             baseDict = new Dictionary<T, IItemWeight<T>>(clone);
         }
@@ -125,7 +126,7 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// </summary>
         /// <param name="item">The item will add into the pool</param>
         public void Add(T item) {
-            baseDict.Add(item, new FixedItemWeight<T>(1));
+            lock (locker) baseDict.Add(item, new FixedItemWeight<T>(1));
         }
 
         /// <summary>
@@ -134,7 +135,7 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <param name="item">The item will add into the pool</param>
         /// <param name="weight">Static weight</param>
         public void Add(T item, double weight) {
-            baseDict.Add(item, new FixedItemWeight<T>(weight));
+            lock (locker) baseDict.Add(item, new FixedItemWeight<T>(weight));
         }
 
         /// <summary>
@@ -143,15 +144,15 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <param name="item">The item will add into the pool</param>
         /// <param name="weight">Weight object which will controls the weight of this item</param>
         public void Add(T item, IItemWeight<T> weight) {
-            baseDict.Add(item, weight ?? new FixedItemWeight<T>(0));
+            lock (locker) baseDict.Add(item, weight ?? new FixedItemWeight<T>(0));
         }
 
         void ICollection<KeyValuePair<T, double>>.Add(KeyValuePair<T, double> item) {
-            baseDict.Add(item.Key, new FixedItemWeight<T>(item.Value));
+            lock (locker) baseDict.Add(item.Key, new FixedItemWeight<T>(item.Value));
         }
 
         void ICollection<KeyValuePair<T, IItemWeight<T>>>.Add(KeyValuePair<T, IItemWeight<T>> item) {
-            baseDict.Add(item.Key, item.Value ?? new FixedItemWeight<T>(0));
+            lock (locker) baseDict.Add(item.Key, item.Value ?? new FixedItemWeight<T>(0));
         }
 
         /// <summary>
@@ -216,22 +217,22 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <param name="item">The item have to remove.</param>
         /// <returns><c>true</c> if successfully remove, otherwise <c>false</c>.</returns>
         public bool Remove(T item) {
-            return baseDict.Remove(item);
+            lock (locker) return baseDict.Remove(item);
         }
 
         bool ICollection<KeyValuePair<T, double>>.Remove(KeyValuePair<T, double> item) {
-            return baseDict.Remove(item.Key);
+            lock (locker) return baseDict.Remove(item.Key);
         }
 
         bool ICollection<KeyValuePair<T, IItemWeight<T>>>.Remove(KeyValuePair<T, IItemWeight<T>> item) {
-            return baseDict.Remove(item.Key);
+            lock (locker) return baseDict.Remove(item.Key);
         }
 
         /// <summary>
         /// Removes everything from the pool.
         /// </summary>
         public void Clear() {
-            baseDict.Clear();
+            lock (locker) baseDict.Clear();
         }
 
         /// <summary>
@@ -268,8 +269,10 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// </summary>
         /// <param name="items">An enumerable object contains all item wanted to add</param>
         public void AddRange(IEnumerable<T> items) {
-            if(items == null) throw new ArgumentNullException("items");
-            foreach(var item in items) baseDict[item] = new FixedItemWeight<T>(1);
+            lock (locker) {
+                if(items == null) throw new ArgumentNullException("items");
+                foreach(var item in items) baseDict[item] = new FixedItemWeight<T>(1);
+            }
         }
 
         /// <summary>
@@ -277,8 +280,10 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// </summary>
         /// <param name="items">An enumerable object contains all item wanted to remove</param>
         public void RemoveRange(IEnumerable<T> items) {
-            if(items == null) throw new ArgumentNullException("items");
-            foreach(var item in items) baseDict.Remove(item);
+            lock (locker) {
+                if(items == null) throw new ArgumentNullException("items");
+                foreach(var item in items) baseDict.Remove(item);
+            }
         }
 
         IEnumerable<KeyValuePair<T, double>> IterateAsStaticWeight() {
@@ -325,8 +330,10 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <returns><c>true</c> if object found and bind successfully, otherwise <c>false</c>.</returns>
         /// <remarks>If <c>null</c> is passed in <paramref name="weight"/>, it will treat as immutable zero weight.</remarks>
         public bool SetWeight(T item, IItemWeight<T> weight) {
-            if(!baseDict.ContainsKey(item)) return false;
-            baseDict[item] = weight ?? new FixedItemWeight<T>(0);
+            lock (locker) {
+                if(!baseDict.ContainsKey(item)) return false;
+                baseDict[item] = weight ?? new FixedItemWeight<T>(0);
+            }
             return true;
         }
 
@@ -339,15 +346,17 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <remarks>If <see cref="ItemWeight{T}"/> is binded, it will change the value of it, otherwise it will bind an immutable static weight controller with the <paramref name="weight"/> defined.</remarks>
         public bool SetWeight(T item, double weight) {
             IItemWeight<T> weightRaw;
-            if(!baseDict.TryGetValue(item, out weightRaw)) return false;
-            if(weightRaw != null) {
-                var flexibleWeight = weightRaw as ItemWeight<T>;
-                if(flexibleWeight != null) {
-                    flexibleWeight.Weight = weight;
-                    return true;
+            lock (locker) {
+                if(!baseDict.TryGetValue(item, out weightRaw)) return false;
+                if(weightRaw != null) {
+                    var flexibleWeight = weightRaw as ItemWeight<T>;
+                    if(flexibleWeight != null) {
+                        flexibleWeight.Weight = weight;
+                        return true;
+                    }
                 }
+                baseDict[item] = new FixedItemWeight<T>(weight);
             }
-            baseDict[item] = new FixedItemWeight<T>(weight);
             return true;
         }
 
@@ -372,33 +381,34 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         /// <returns>The random item</returns>
         /// <remarks>This overloaded method is for more advanced uses, which require callers to generate the random number by themself then passing it in.</remarks>
         public virtual T GetRandomItem(double randomValue) {
-            int i = 0, count = baseDict.Count;
-            if(count < 1) return default(T);
-            double totalWeight = 0, countedWeight = 0;
-            var tempList = new KeyValuePair<T, double>[count];
-            foreach(var kv in IterateAsStaticWeight()) {
-                tempList[i++] = kv;
-                totalWeight += kv.Value;
-            }
             T result;
             IItemWeight<T> weight;
-            if(count == 1) {
-                result = tempList[0].Key;
-            } else {
-                randomValue = ((randomValue % 1 + 1) % 1) * totalWeight;
-                result = tempList[count - 1].Key;
-                for(i = 0; i < count; i++) {
-                    countedWeight += tempList[i].Value;
-                    if(countedWeight > randomValue) {
-                        result = tempList[i].Key;
-                        break;
+            lock (locker) {
+                int i = 0, count = baseDict.Count;
+                if(count < 1) return default(T);
+                double totalWeight = 0, countedWeight = 0;
+                var tempList = new KeyValuePair<T, double>[count];
+                foreach(var kv in IterateAsStaticWeight()) {
+                    tempList[i++] = kv;
+                    totalWeight += kv.Value;
+                }
+                if(count == 1) {
+                    result = tempList[0].Key;
+                } else {
+                    randomValue = ((randomValue % 1 + 1) % 1) * totalWeight;
+                    result = tempList[count - 1].Key;
+                    for(i = 0; i < count; i++) {
+                        countedWeight += tempList[i].Value;
+                        if(countedWeight > randomValue) {
+                            result = tempList[i].Key;
+                            break;
+                        }
                     }
                 }
+                baseDict.TryGetValue(result, out weight);
             }
-            if(baseDict.TryGetValue(result, out weight)) {
-                var callback = weight as ISuccessCallback<T>;
-                if(callback != null) callback.OnSuccess(result);
-            }
+            var callback = weight as ISuccessCallback<T>;
+            if(callback != null) callback.OnSuccess(result);
             return result;
         }
     }
