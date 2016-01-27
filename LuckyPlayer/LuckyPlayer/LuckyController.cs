@@ -8,10 +8,6 @@ namespace JLChnToZ.LuckyPlayer {
     /// <typeparam name="T"></typeparam>
     /// <remarks>You can inherit this class to add customizaton</remarks>
     public class LuckyController<T>: IItemWeight<T>, ISuccessCallback<T> {
-        /// <summary>
-        /// Take a couple percentage of probs when success.
-        /// </summary>
-        public static double fineTuneOnSuccess = -0.0001;
         internal protected readonly double rare;
         internal protected double baseRarity;
         internal protected PlayerLuck luckInstance;
