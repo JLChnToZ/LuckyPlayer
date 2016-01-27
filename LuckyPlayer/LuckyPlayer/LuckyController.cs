@@ -16,15 +16,17 @@ namespace JLChnToZ.LuckyPlayer {
         internal protected double baseRarity;
         internal protected PlayerLuck luckInstance;
         internal protected double fineTune;
+        internal protected DestinyTuner<T> destinyTuner;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="rare">The rarity which will affects the player's luckyness.</param>
         /// <param name="baseRarity">Alterable rarity value</param>
-        public LuckyController(double rare, double baseRarity = 1) {
+        public LuckyController(double rare, double baseRarity = 1, DestinyTuner<T> destinyTuner = null) {
             this.rare = rare;
             this.baseRarity = baseRarity;
+            this.destinyTuner = destinyTuner ?? DestinyTuner<T>.Default;
             ResetFineTuneWeight();
         }
 
@@ -41,7 +43,7 @@ namespace JLChnToZ.LuckyPlayer {
         /// </summary>
         /// <param name="item">The selected item</param>
         public virtual void OnSuccess(T item) {
-            fineTune *= 1 + fineTuneOnSuccess;
+            destinyTuner.TuneDestinyOnSuccess(this);
         }
 
         internal protected virtual void ResetFineTuneWeight() {
