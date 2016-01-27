@@ -18,11 +18,7 @@ namespace JLChnToZ.LuckyPlayer {
         double fineTuneOnSuccess;
         public double FineTuneOnSuccess {
             get { return fineTuneOnSuccess; }
-            set {
-                if(value < 0 || value > 1)
-                    throw new ArgumentOutOfRangeException("Value must be between 0 and 1");
-                fineTuneOnSuccess = value;
-            }
+            set { fineTuneOnSuccess = value; }
         }
 
         public DestinyTuner() {
