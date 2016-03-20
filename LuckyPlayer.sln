@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuckyPlayer", "LuckyPlayer\LuckyPlayer.csproj", "{EC408A7F-63C0-4FB2-B28F-8B04AF983194}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuckyPlayerDemo", "LuckyPlayerDemo\LuckyPlayerDemo.csproj", "{BD8BD08A-4E78-483B-A504-4DDA7EA9957E}"
 EndProject
 Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "LuckyPlayerDocs", "LuckyPlayerDocs\LuckyPlayerDocs.shfbproj", "{9CAC8A7C-886D-445D-80A6-DDD6A522885B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeightRandomizerShowcase", "WeightRandomizerShowcase\WeightRandomizerShowcase.csproj", "{A3EBBAFF-0D34-4FFD-80A2-FF5CE6D645D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +25,14 @@ Global
 		{BD8BD08A-4E78-483B-A504-4DDA7EA9957E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD8BD08A-4E78-483B-A504-4DDA7EA9957E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD8BD08A-4E78-483B-A504-4DDA7EA9957E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CAC8A7C-886D-445D-80A6-DDD6A522885B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CAC8A7C-886D-445D-80A6-DDD6A522885B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CAC8A7C-886D-445D-80A6-DDD6A522885B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CAC8A7C-886D-445D-80A6-DDD6A522885B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3EBBAFF-0D34-4FFD-80A2-FF5CE6D645D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3EBBAFF-0D34-4FFD-80A2-FF5CE6D645D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3EBBAFF-0D34-4FFD-80A2-FF5CE6D645D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3EBBAFF-0D34-4FFD-80A2-FF5CE6D645D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
