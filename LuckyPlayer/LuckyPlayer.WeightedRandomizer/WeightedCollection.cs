@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
     /// <summary>
@@ -9,6 +10,19 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
     /// <typeparam name="T">Generic type</typeparam>
     /// <remarks>This class behave like a set.</remarks>
     public class WeightedCollection<T>: ICollection<T>, IDictionary<T, IItemWeight<T>>, IDictionary<T, double>, ICloneable {
+        struct ItemWeightMap {
+            public readonly T item;
+            public readonly double weight;
+
+            public ItemWeightMap(T item, double weight) {
+                this.item = item;
+                this.weight = weight;
+            }
+
+            public static implicit operator KeyValuePair<T, double>(ItemWeightMap map) {
+                return new KeyValuePair<T, double>(map.item, map.weight);
+            }
+        }
         static Random defaultRandomizer;
         object locker = new object();
         internal readonly Dictionary<T, IItemWeight<T>> baseDict;
@@ -252,7 +266,7 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
         }
 
         IEnumerator<KeyValuePair<T, double>> IEnumerable<KeyValuePair<T, double>>.GetEnumerator() {
-            return IterateAsStaticWeight().GetEnumerator();
+            return IterateAsStaticWeight().Cast<KeyValuePair<T, double>>().GetEnumerator();
         }
 
         /// <summary>
@@ -286,9 +300,9 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             }
         }
 
-        IEnumerable<KeyValuePair<T, double>> IterateAsStaticWeight() {
+        IEnumerable<ItemWeightMap> IterateAsStaticWeight() {
             foreach(var kv in baseDict)
-                yield return new KeyValuePair<T, double>(kv.Key, kv.Value.GetWeight(kv.Key));
+                yield return new ItemWeightMap(kv.Key, kv.Value.GetWeight(kv.Key));
         }
 
         /// <summary>
@@ -387,20 +401,20 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
                 int i = 0, count = baseDict.Count;
                 if(count < 1) return default(T);
                 double totalWeight = 0, countedWeight = 0;
-                var tempList = new KeyValuePair<T, double>[count];
-                foreach(var kv in IterateAsStaticWeight()) {
-                    tempList[i++] = kv;
-                    totalWeight += kv.Value;
+                var mappedList = new ItemWeightMap[count];
+                foreach(var map in IterateAsStaticWeight()) {
+                    mappedList[i++] = map;
+                    totalWeight += map.weight;
                 }
                 if(count == 1) {
-                    result = tempList[0].Key;
+                    result = mappedList[0].item;
                 } else {
                     randomValue = ((randomValue % 1 + 1) % 1) * totalWeight;
-                    result = tempList[count - 1].Key;
+                    result = mappedList[count - 1].item;
                     for(i = 0; i < count; i++) {
-                        countedWeight += tempList[i].Value;
+                        countedWeight += mappedList[i].weight;
                         if(countedWeight > randomValue) {
-                            result = tempList[i].Key;
+                            result = mappedList[i].item;
                             break;
                         }
                     }
@@ -410,6 +424,31 @@ namespace JLChnToZ.LuckyPlayer.WeightedRandomizer {
             var callback = weight as ISuccessCallback<T>;
             if(callback != null) callback.OnSuccess(result);
             return result;
+        }
+
+        /// <summary>
+        /// Get large amount of items from the pool. Assumes all weights are static.
+        /// </summary>
+        /// <remarks>This method will not perform any random operations,
+        /// it just simply returns the weight table scales by the count.
+        /// It will not trigger any <see cref="ISuccessCallback{T}.OnSuccess(T)"/> and
+        /// the <see cref="IItemWeight{T}.GetWeight(T)"/> of each item will be only called once.</remarks>
+        /// <param name="count">How many items you want to get.</param>
+        /// <returns>An enumerable object contains a bunch of key value pairs describes the count of each single item.</returns>
+        public virtual IEnumerable<ItemCount<T>> GetLargeAmountRandomItems(int count) {
+            ItemWeightMap[] mappedList;
+            double totalWeight = 0;
+            lock (locker) {
+                int i = 0, dictCount = baseDict.Count;
+                mappedList = new ItemWeightMap[dictCount];
+                if(dictCount < 1) yield break;
+                foreach(var map in IterateAsStaticWeight()) {
+                    mappedList[i++] = map;
+                    totalWeight += map.weight;
+                }
+            }
+            foreach(var kv in mappedList)
+                yield return new ItemCount<T>(kv.item, (int)Math.Round(kv.weight / totalWeight * count));
         }
     }
 }

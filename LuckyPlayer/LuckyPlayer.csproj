@@ -34,6 +34,7 @@
     <Compile Include="LuckyPlayer.WeightedRandomizer\FixedItemWeight.cs" />
     <Compile Include="LuckyPlayer.WeightedRandomizer\IItemWeight.cs" />
     <Compile Include="LuckyPlayer.WeightedRandomizer\ISuccessCallback.cs" />
+    <Compile Include="LuckyPlayer.WeightedRandomizer\ItemCount.cs" />
     <Compile Include="LuckyPlayer.WeightedRandomizer\ItemWeight.cs" />
     <Compile Include="LuckyPlayer.WeightedRandomizer\ItemWeightCollection.cs" />
     <Compile Include="LuckyPlayer\DestinyTuner.cs" />
