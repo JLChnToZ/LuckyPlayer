@@ -29,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\LuckyPlayer.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="LuckyPlayer.WeightedRandomizer\FixedItemWeight.cs" />
